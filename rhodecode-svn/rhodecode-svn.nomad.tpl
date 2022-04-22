@@ -78,23 +78,19 @@ EOT
 LoadModule headers_module /usr/lib/apache2/modules/mod_headers.so
 LoadModule authn_anon_module /usr/lib/apache2/modules/mod_authn_anon.so
 
-<VirtualHost *:$\u007BMOD_DAV_SVN_PORT\u007D>
+<VirtualHost *:8090>
     ServerAdmin admin@localhost
     DocumentRoot /var/opt/www
-    ErrorLog $\u007BAPACHE_LOG_DIR\u007D/svn_error.log
-    CustomLog $\u007BAPACHE_LOG_DIR\u007D/svn_access.log combined
+    ErrorLog /var/log/rhodecode/svn/svn_error.log
+    CustomLog /var/log/rhodecode/svn/svn_access.log combined
     LogLevel info
-
     <Location /_server_status>
         SetHandler server-status
-        #Allow from all
         Require ip 10.3.0.0/16
     </Location>
-
     # allows custom host names, prevents 400 errors on checkout
     HttpProtocolOptions Unsafe
-
-    Include $\u007BMOD_DAV_SVN_CONF_FILE\u007D
+    Include /etc/rhodecode/conf/svn/mod_dav_svn.conf
 </VirtualHost>
 EOT
                                 destination = "local/virtualhost.conf"
