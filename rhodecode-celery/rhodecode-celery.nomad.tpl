@@ -14,19 +14,19 @@ job "rhodecode-celery" {
                 count = "1"
                 # install only on "data" nodes
                 constraint {
-                                attribute = "$\u007Bnode.class\u007D"
-                                value     = "data"
+			attribute = "$\u007Bnode.class\u007D"
+			value     = "data"
                 }
                 restart {
-                                attempts = 3
-                                delay = "60s"
-                                interval = "1h"
-                                mode = "fail"
+			attempts = 3
+			delay = "60s"
+			interval = "1h"
+			mode = "fail"
                 }
                 task "rhodecode-celery" {
                         driver = "docker"
                         template {
-                                data = <<EOT
+				data = <<EOT
 RC_APP_TYPE="rhodecode_celery"
 RC_APP_PROC=1
 SSL_CERT_FILE="/etc/rhodecode/conf/ca-bundle.crt"
