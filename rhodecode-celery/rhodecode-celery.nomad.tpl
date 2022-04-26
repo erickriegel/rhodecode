@@ -320,6 +320,7 @@ EOT
 														name = "pxd"
 														options {
 																io_priority = "high"
+																shared = true
 																size = 1
 																repl = 2
 														}
