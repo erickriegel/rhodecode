@@ -38,6 +38,7 @@ EOT
                                 env = true
                         }
                         template {
+			        destination = "secrets/rhodecode.optimized.ini"
                                 data = <<EOT
 ; ##########################################
 ; RHODECODE ENTERPRISE EDITION CONFIGURATION
@@ -294,57 +295,55 @@ class = rhodecode.lib.logging_formatter.ColorFormatterSql
 format = %(asctime)s.%(msecs)03d [%(process)d] %(levelname)-5.5s [%(name)s] %(message)s
 datefmt = %Y-%m-%d %H:%M:%S
 EOT
-                                destination = "secrets/rhodecode.optimized.ini"
-
                         }
                         config {
                                 image = "${image}:${tag}"
                                 command = "/var/opt/rhodecode_bin/bin/celery"
                                 args = [
-                                                "worker",
-                                                "--task-events",
-                                                "--autoscale=10,2",
-                                                "--no-color",
-                                                "--app=rhodecode.lib.celerylib.loader",
-                                                "--loglevel=DEBUG",
-                                                "--ini=/secrets/rhodecode.optimized.ini"
-                                                ]
-								mount {
-										type = "volume"
-										target = "/var/opt/rhodecode_data"
-										source = "rhodecode-data"
-										readonly = false
-										volume_options {
-												no_copy = false
-												driver_config {
-														name = "pxd"
-														options {
-																io_priority = "high"
-																shared = true
-																size = 1
-																repl = 2
-														}
-												}
-										}
-								}
-								mount {
-										type = "volume"
-										target = "/var/opt/rhodecode_repo_store"
-										source = "rhodecode-repos"
-										readonly = false
-										volume_options {
-												no_copy = false
-												driver_config {
-														name = "pxd"
-														options {
-																io_priority = "high"
-																shared = true
-																size = 20
-																repl = 2
-														}
-												}
-										}
-								}
+					"worker",
+					"--task-events",
+					"--autoscale=10,2",
+					"--no-color",
+					"--app=rhodecode.lib.celerylib.loader",
+					"--loglevel=DEBUG",
+					"--ini=/secrets/rhodecode.optimized.ini"
+				]
+				mount {
+					type = "volume"
+					target = "/var/opt/rhodecode_data"
+					source = "rhodecode-data"
+					readonly = false
+					volume_options {
+						no_copy = false
+						driver_config {
+							name = "pxd"
+							options {
+								io_priority = "high"
+								shared = true
+								size = 1
+								repl = 2
+							}
+						}
+					}
+				}
+				mount {
+					type = "volume"
+					target = "/var/opt/rhodecode_repo_store"
+					source = "rhodecode-repos"
+					readonly = false
+					volume_options {
+						no_copy = false
+						driver_config {
+							name = "pxd"
+							options {
+								io_priority = "high"
+								shared = true
+								size = 20
+								repl = 2
+							}
+						}
+					}
+				}
                                 mount {
                                         type = "bind"
                                         target = "/var/log/rhodecode"
