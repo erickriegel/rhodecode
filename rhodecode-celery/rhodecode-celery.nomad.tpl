@@ -185,12 +185,12 @@ sqlalchemy.db1.convert_unicode = true
 ; VCS CONFIG
 ; ##########
 vcs.server.enable = true
-vcs.server = {{ range service "rhodecode-vcsserver" }}{{ .Address }}:{{ .Port }}{{ end }}
+vcs.server = {{ range service "rhodecode-community-vcsserver" }}{{ .Address }}:{{ .Port }}{{ end }}
 vcs.server.protocol = http
 vcs.scm_app_implementation = http
 vcs.hooks.protocol = http
 ; Host on which this instance is listening for hooks. If vcsserver is in other location, this should be adjusted.
-vcs.hooks.host = {{ range service "rhodecode-vcsserver" }}{{ .Address }}:{{ .Port }}{{ end }}
+;vcs.hooks.host = {{ range service "rhodecode-vcsserver" }}{{ .Address }}:{{ .Port }}{{ end }}
 vcs.start_server = false
 vcs.backends = git, svn
 vcs.connection_timeout = 3600
