@@ -1,10 +1,12 @@
 job "rhodecode-community" {
         datacenters = ["${datacenter}"]
         type = "service"
+        
         vault {
                 policies = ["forge"]
                 change_mode = "restart"
-    }
+        }
+        
         update {
                 stagger = "30s"
                 max_parallel = 1
@@ -14,19 +16,19 @@ job "rhodecode-community" {
                 count = "1"
                 # install only on "data" nodes
                 constraint {
-                                attribute = "$\u007Bnode.class\u007D"
-                                value     = "data"
+                        attribute = "$\u007Bnode.class\u007D"
+                        value     = "data"
                 }
                 restart {
-                                attempts = 3
-                                delay = "60s"
-                                interval = "1h"
-                                mode = "fail"
+                        attempts = 3
+                        delay = "60s"
+                        interval = "1h"
+                        mode = "fail"
                 }
                 network {
-                                mode = "host"
-                                port "rhodecode" { to = 10020 }
-                                port "vcsserver" { to = 10010 }
+                        mode = "host"
+                        port "rhodecode" { to = 10020 }
+                        port "vcsserver" { to = 10010 }
                 }
                 task "rhodecode" {
                         artifact {
@@ -529,40 +531,40 @@ EOT
                                 args = [ "/local/run.sh" ]
                                 ports = ["rhodecode", "vcsserver"]
                                 mount {
-                                  type = "volume"
-                                  target = "/var/opt/rhodecode_repo_store"
-                                  source = "rhodecode-repos"
-                                  readonly = false
-                                  volume_options {
-                                        no_copy = false
-                                        driver_config {
-                                          name = "pxd"
-                                          options {
-                                                io_priority = "high"
-                                                shared = true
-                                                size = 20
-                                                repl = 2
-                                          }
+                                        type = "volume"
+                                        target = "/var/opt/rhodecode_repo_store"
+                                        source = "rhodecode-repos"
+                                        readonly = false
+                                        volume_options {
+                                                no_copy = false
+                                                driver_config {
+                                                        name = "pxd"
+                                                        options {
+                                                                io_priority = "high"
+                                                                shared = true
+                                                                size = 20
+                                                                repl = 2
+                                                        }
+                                                }
                                         }
-                                  }
                                 }
                                 mount {
-                                  type = "volume"
-                                  target = "/etc/rhodecode/conf"
-                                  source = "rhodecode-conf"
-                                  readonly = false
-                                  volume_options {
-                                        no_copy = false
-                                        driver_config {
-                                          name = "pxd"
-                                          options {
-                                                io_priority = "high"
-                                                shared = true
-                                                size = 1
-                                                repl = 2
-                                          }
+                                        type = "volume"
+                                        target = "/etc/rhodecode/conf"
+                                        source = "rhodecode-conf"
+                                        readonly = false
+                                        volume_options {
+                                                no_copy = false
+                                                driver_config {
+                                                        name = "pxd"
+                                                        options {
+                                                                io_priority = "high"
+                                                                shared = true
+                                                                size = 1
+                                                                repl = 2
+                                                        }
+                                                }
                                         }
-                                  }
                                 }
                                 mount {
                                   type = "volume"
@@ -601,8 +603,8 @@ EOT
                                 }
                         }
                         resources {
-                                        cpu = 1024
-                                        memory = 7168
+                                cpu = 1024
+                                memory = 7168
                         }
                         service {
                                 name = "$\u007BNOMAD_TASK_NAME\u007D-http"
