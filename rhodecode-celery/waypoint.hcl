@@ -16,8 +16,8 @@ app "rhodecode-celery" {
 
     build {
         use "docker-pull" {
-            image = "ans/rhodecode-app"
-            tag   = "4.26.0"
+            image = var.image
+            tag   = var.tag
 	    disable_entrypoint = true
         }
     }
@@ -26,6 +26,8 @@ app "rhodecode-celery" {
         use "nomad-jobspec" {
             jobspec = templatefile("${path.app}/rhodecode-celery.nomad.tpl", {
             	datacenter = var.datacenter
+		image = var.image
+		tag   = var.tag
             })
         }
     }
@@ -34,4 +36,14 @@ app "rhodecode-celery" {
 variable "datacenter" {
     type    = string
     default = "henix_docker_platform_integ"
+}
+
+variable "image" {
+    type    = string
+    default = "ans/rhodecode-app"
+}
+
+variable "tag" {
+    type    = string
+    default = "4.26.0"
 }
