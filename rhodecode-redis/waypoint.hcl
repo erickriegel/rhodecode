@@ -25,7 +25,7 @@ app "rhodecode-redis" {
     deploy{
         use "nomad-jobspec" {
             jobspec = templatefile("${path.app}/rhodecode-redis.nomad.tpl", {
-            datacenter = var.datacenter
+            	datacenter = var.datacenter
             })
         }
     }
