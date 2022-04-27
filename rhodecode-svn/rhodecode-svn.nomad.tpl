@@ -1,10 +1,12 @@
 job "rhodecode-svn" {
         datacenters = ["${datacenter}"]
         type = "service"
+        
         vault {
                 policies = ["forge"]
                 change_mode = "restart"
-    }
+        }
+        
         update {
                 stagger = "30s"
                 max_parallel = 1
@@ -14,18 +16,18 @@ job "rhodecode-svn" {
                 count = "1"
                 # install only on "data" nodes
                 constraint {
-                                attribute = "$\u007Bnode.class\u007D"
-                                value     = "data"
+                        attribute = "$\u007Bnode.class\u007D"
+                        value     = "data"
                 }
                 restart {
-                                attempts = 3
-                                delay = "60s"
-                                interval = "1h"
-                                mode = "fail"
+                        attempts = 3
+                        delay = "60s"
+                        interval = "1h"
+                        mode = "fail"
                 }
                 network {
-                                mode = "host"
-                                port "webdav" { to = 8090 }
+                        mode = "host"
+                        port "webdav" { to = 8090 }
                 }
                 task "prep-disk" {
                         driver = "docker"
@@ -131,14 +133,14 @@ EOT
                                                 driver_config {
                                                         name = "pxd"
                                                         options {
-                                                                        io_priority = "high"
-                                                                        shared = true
-                                                                        size = 1
-                                                                        repl = 2
-                                                                        }
-                                                                }
+                                                                io_priority = "high"
+                                                                shared = true
+                                                                size = 1
+                                                                repl = 2
                                                         }
                                                 }
+                                         }
+                                }
                                 mount {
                                         type = "bind"
                                         target = "/var/log/rhodecode/svn"
