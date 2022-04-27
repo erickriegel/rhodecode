@@ -26,6 +26,10 @@ app "rhodecode-app" {
         use "nomad-jobspec" {
             jobspec = templatefile("${path.app}/rhodecode-community.nomad.tpl", {
             datacenter = var.datacenter
+	    image = var.image
+	    tag = var.tag
+	    cpu = var.cpu
+	    memory = var.memory
             })
         }
     }
@@ -44,4 +48,14 @@ variable "cpu" {
 variable "memory" {
     type    = string
     default = "7168"
+}
+
+variable "image" {
+    type    = string
+    default = "ans/rhodecode-app"
+}
+
+variable "tag" {
+    type    = string
+    default = "4.26.0"
 }
