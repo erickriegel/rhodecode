@@ -88,7 +88,7 @@ LoadModule authn_anon_module /usr/lib/apache2/modules/mod_authn_anon.so
     LogLevel info
     <Location /_server_status>
         SetHandler server-status
-        Require ip 10.3.0.0/16
+        Require ip ${require_ip}
     </Location>
     # allows custom host names, prevents 400 errors on checkout
     HttpProtocolOptions Unsafe
@@ -161,8 +161,8 @@ EOT
                                 }
                         }
                         resources {
-                                        cpu = 200
-                                        memory = 512
+                                cpu = 200
+                                memory = 512
                         }
                         service {
                                 name = "$\u007BNOMAD_JOB_NAME\u007D"
