@@ -35,3 +35,8 @@ variable "datacenter" {
     type    = string
     default = "henix_docker_platform_integ"
 }
+
+variable "require_ip" {
+    type    = string
+    default = "10.3.0.0/16"
+}
