@@ -263,7 +263,7 @@ EOT
 ; ##########################################
 [DEFAULT]
 ; Debug flag sets all loggers to debug, and enables request tracking
-debug = false
+debug = {{ with secret "forge/rhodecode/app" }}{{ .Data.data.debug }}{{end}}
 
 ########################################################################
 ; EMAIL CONFIGURATION
@@ -603,8 +603,8 @@ EOT
                                 }
                         }
                         resources {
-                                cpu = 1024
-                                memory = 7168
+                                cpu = ${cpu}
+                                memory = ${memory}
                         }
                         service {
                                 name = "$\u007BNOMAD_TASK_NAME\u007D-http"
@@ -613,7 +613,7 @@ EOT
                                 check {
                                         name         = "rhodecode-alive"
                                         type         = "http"
-                                        path              = "_admin/ops/ping"
+                                        path         = "_admin/ops/ping"
                                         interval     = "60s"
                                         timeout      = "30s"
                                         port         = "rhodecode"
@@ -625,7 +625,7 @@ EOT
                                 check {
                                         name         = "vcsserver-alive"
                                         type         = "http"
-                                        path              = "/status"
+                                        path         = "/status"
                                         interval     = "60s"
                                         timeout      = "30s"
                                         port         = "vcsserver"
