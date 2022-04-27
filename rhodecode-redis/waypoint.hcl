@@ -16,8 +16,8 @@ app "rhodecode-redis" {
 
     build {
         use "docker-pull" {
-            image = "ans/rhodecode-redis"
-            tag   = "6.2.6"
+            image = var.image
+            tag   = var.tag
 	    disable_entrypoint = true
         }
     }
@@ -26,6 +26,8 @@ app "rhodecode-redis" {
         use "nomad-jobspec" {
             jobspec = templatefile("${path.app}/rhodecode-redis.nomad.tpl", {
             	datacenter = var.datacenter
+		image = var.image
+		tag   = var.tag
             })
         }
     }
@@ -34,4 +36,14 @@ app "rhodecode-redis" {
 variable "datacenter" {
     type    = string
     default = "henix_docker_platform_integ"
+}
+
+variable "image" {
+    type    = string
+    default = "ans/rhodecode-redis"
+}
+
+variable "tag" {
+    type    = string
+    default = "6.2.6"
 }
