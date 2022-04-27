@@ -305,7 +305,7 @@ EOT
 					"--autoscale=10,2",
 					"--no-color",
 					"--app=rhodecode.lib.celerylib.loader",
-					"--loglevel=DEBUG",
+					"--loglevel=INFO",
 					"--ini=/secrets/rhodecode.optimized.ini"
 				]
 				mount {
