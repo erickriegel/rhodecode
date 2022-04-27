@@ -7,8 +7,8 @@ runner {
     data_source "git" {
         url  = "https://github.com/erickriegel/rhodecode.git"
         ref  = "main"
-		path = "rhodecode-redis/"
-		ignore_changes_outside_path = true
+	path = "rhodecode-redis/"
+	ignore_changes_outside_path = true
     }
 }
 
@@ -16,17 +16,15 @@ app "rhodecode-redis" {
 
     build {
         use "docker-pull" {
-            image = var.image
-            tag   = var.tag
-	        disable_entrypoint = true
+            image = "ans/rhodecode-redis"
+            tag   = "6.2.6"
+	    disable_entrypoint = true
         }
     }
   
     deploy{
         use "nomad-jobspec" {
             jobspec = templatefile("${path.app}/rhodecode-redis.nomad.tpl", {
-            image   = var.image
-            tag     = var.tag
             datacenter = var.datacenter
             })
         }
@@ -36,14 +34,4 @@ app "rhodecode-redis" {
 variable "datacenter" {
     type    = string
     default = "henix_docker_platform_integ"
-}
-
-variable "image" {
-    type    = string
-    default = "ans/rhodecode-redis"
-}
-
-variable "tag" {
-    type    = string
-    default = "6.2.6"
 }
