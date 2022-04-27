@@ -35,3 +35,13 @@ variable "datacenter" {
     type    = string
     default = "henix_docker_platform_integ"
 }
+
+variable "cpu" {
+    type    = string
+    default = "1024"
+}
+
+variable "memory" {
+    type    = string
+    default = "7168"
+}
