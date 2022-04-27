@@ -16,8 +16,8 @@ app "rhodecode-db" {
 
     build {
         use "docker-pull" {
-            image = "ans/rhodecode-database"
-            tag   = "13.5"
+            image = var.image
+            tag   = var.tag
 	    disable_entrypoint = true
         }
     }
@@ -26,8 +26,8 @@ app "rhodecode-db" {
         use "nomad-jobspec" {
             jobspec = templatefile("${path.app}/rhodecode-postgres.nomad.tpl", {
             	datacenter = var.datacenter
-		image = "ans/rhodecode-database"
-		tag   = "13.5"
+		image = var.image
+		tag   = var.tag
             })
         }
     }
@@ -36,4 +36,14 @@ app "rhodecode-db" {
 variable "datacenter" {
     type    = string
     default = "henix_docker_platform_integ"
+}
+
+variable "image" {
+    type    = string
+    default = "ans/rhodecode-database"
+}
+
+variable "tag" {
+    type    = string
+    default = "13.5"
 }
