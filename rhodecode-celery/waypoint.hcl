@@ -7,8 +7,8 @@ runner {
     data_source "git" {
         url  = "https://github.com/erickriegel/rhodecode.git"
         ref  = "main"
-		path = "rhodecode-celery/"
-		ignore_changes_outside_path = true
+	path = "rhodecode-celery/"
+	ignore_changes_outside_path = true
     }
 }
 
@@ -16,18 +16,16 @@ app "rhodecode-celery" {
 
     build {
         use "docker-pull" {
-            image = var.image
-            tag   = var.tag
-	        disable_entrypoint = true
+            image = "ans/rhodecode-app"
+            tag   = "4.26.0"
+	    disable_entrypoint = true
         }
     }
   
     deploy{
         use "nomad-jobspec" {
             jobspec = templatefile("${path.app}/rhodecode-celery.nomad.tpl", {
-            image   = var.image
-            tag     = var.tag
-            datacenter = var.datacenter
+            	datacenter = var.datacenter
             })
         }
     }
@@ -36,14 +34,4 @@ app "rhodecode-celery" {
 variable "datacenter" {
     type    = string
     default = "henix_docker_platform_integ"
-}
-
-variable "image" {
-    type    = string
-    default = "ans/rhodecode-app"
-}
-
-variable "tag" {
-    type    = string
-    default = "4.26.0"
 }
