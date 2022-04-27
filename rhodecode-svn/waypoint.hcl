@@ -16,8 +16,8 @@ app "rhodecode-svn" {
 
     build {
         use "docker-pull" {
-            image = "ans/rhodecode-app"
-            tag   = "4.26.0"
+            image = var.image
+            tag   = var.tag
 	    disable_entrypoint = true
         }
     }
@@ -26,6 +26,8 @@ app "rhodecode-svn" {
         use "nomad-jobspec" {
             jobspec = templatefile("${path.app}/rhodecode-svn.nomad.tpl", {
             datacenter = var.datacenter
+            image = var.image
+            tag   = var.tag
             })
         }
     }
@@ -39,4 +41,14 @@ variable "datacenter" {
 variable "require_ip" {
     type    = string
     default = "10.3.0.0/16"
+}
+
+variable "image" {
+    type    = string
+    default = "ans/rhodecode-app"
+}
+
+variable "tag" {
+    type    = string
+    default = "4.26.0"
 }
