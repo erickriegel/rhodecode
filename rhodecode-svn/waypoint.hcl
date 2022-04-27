@@ -28,6 +28,7 @@ app "rhodecode-svn" {
             datacenter = var.datacenter
             image = var.image
             tag   = var.tag
+	    require_ip = var.require_ip
             })
         }
     }
