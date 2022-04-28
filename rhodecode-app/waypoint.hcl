@@ -16,8 +16,8 @@ app "rhodecode-app" {
 
     build {
         use "docker-pull" {
-            image = "ans/rhodecode-app"
-            tag   = "4.26.0"
+            image = var.image
+            tag   = var.tag
 	    disable_entrypoint = true
         }
     }
@@ -26,8 +26,8 @@ app "rhodecode-app" {
         use "nomad-jobspec" {
             jobspec = templatefile("${path.app}/rhodecode-community.nomad.tpl", {
             datacenter = var.datacenter
-	    image = "ans/rhodecode-app"
-	    tag = "4.26.0"
+	    image = var.image
+	    tag = var.tag
 	    cpu = var.cpu
 	    memory = var.memory
             })
