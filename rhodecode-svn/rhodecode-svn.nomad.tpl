@@ -167,7 +167,7 @@ EOT
                         service {
                                 name = "$\u007BNOMAD_JOB_NAME\u007D"
                                 port = "webdav"
-                                tags = [ "urlprefix-svn/" ]
+                                tags = [ "urlprefix-/repos" ]
                                 check {
                                         name         = "alive"
                                         type         = "http"
