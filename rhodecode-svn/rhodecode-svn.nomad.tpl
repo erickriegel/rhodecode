@@ -170,8 +170,8 @@ EOT
                                 tags = [ "urlprefix-svn/" ]
                                 check {
                                         name         = "alive"
-                                        type         = "http"
-                                        path         = "/_server_status?auto"
+                                        type         = "tcp"
+                                        #path         = "/_server_status?auto"
                                         interval     = "10s"
                                         timeout      = "2s"
                                         port         = "webdav"
