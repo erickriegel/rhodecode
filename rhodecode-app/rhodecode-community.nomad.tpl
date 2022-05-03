@@ -467,6 +467,7 @@ svn.proxy.generate_config = true
 svn.proxy.list_parent_path = true
 svn.proxy.config_file_path = /etc/rhodecode/conf/svn/mod_dav_svn.conf
 svn.proxy.location_root = /
+svn.proxy.reload_cmd = apachectl -k graceful
 ; ####################
 ; SSH Support Settings
 ; ####################
