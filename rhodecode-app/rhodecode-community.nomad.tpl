@@ -67,7 +67,7 @@ job "rhodecode-community" {
 		}
 		task "rhodecode" {
 			artifact {
-				source = ${extensions_url}
+				source = "${extensions_url}"
 				destination = "local"
 			}
 
