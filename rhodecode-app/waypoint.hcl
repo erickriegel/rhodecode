@@ -57,7 +57,6 @@ variable "extensions_url" {
 	default = "http://repo.proxy-dev-forge.asip.hst.fluxus.net/artifactory/ext-tools/rhodecode/rcextensions.zip"
 }
 
-variable 
 variable "image" {
     type    = string
     default = "ans/rhodecode-app"
