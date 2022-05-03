@@ -25,11 +25,13 @@ app "rhodecode-app" {
     deploy{
         use "nomad-jobspec" {
             jobspec = templatefile("${path.app}/rhodecode-community.nomad.tpl", {
-            datacenter = var.datacenter
-	    image = var.image
-	    tag = var.tag
-	    cpu = var.cpu
-	    memory = var.memory
+				datacenter = var.datacenter
+				image = var.image
+				tag = var.tag
+				cpu = var.cpu
+				memory = var.memory
+				extensions_url = var.extensions_url
+				
             })
         }
     }
@@ -50,6 +52,12 @@ variable "memory" {
     default = "7168"
 }
 
+variable "extensions_url" {
+	type	= string
+	default = "http://repo.proxy-dev-forge.asip.hst.fluxus.net/artifactory/ext-tools/rhodecode/rcextensions.zip"
+}
+
+variable 
 variable "image" {
     type    = string
     default = "ans/rhodecode-app"

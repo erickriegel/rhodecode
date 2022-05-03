@@ -1,51 +1,96 @@
 job "rhodecode-community" {
-        datacenters = ["${datacenter}"]
-        type = "service"
-        
-        vault {
-                policies = ["forge"]
-                change_mode = "restart"
-        }
-        
-        update {
-                stagger = "30s"
-                max_parallel = 1
-        }
+	datacenters = ["${datacenter}"]
+	type = "service"
 
-        group "rhodecode-server" {
-                count = "1"
-                # install only on "data" nodes
-                constraint {
-                        attribute = "$\u007Bnode.class\u007D"
-                        value     = "data"
-                }
-                restart {
-                        attempts = 3
-                        delay = "60s"
-                        interval = "1h"
-                        mode = "fail"
-                }
-                network {
-                        mode = "host"
-                        port "rhodecode" { to = 10020 }
-                        port "vcsserver" { to = 10010 }
-                }
-                task "rhodecode" {
-                        artifact {
-                                source = "http://repo.proxy-dev-forge.asip.hst.fluxus.net/artifactory/ext-tools/rhodecode/rcextensions.zip"
-                                destination = "local"
-                        }
+	vault {
+		policies = ["forge"]
+		change_mode = "restart"
+	}
+	
+	update {
+		stagger = "30s"
+		max_parallel = 1
+	}
 
-                        driver = "docker"
-                        template {
-                                data =<<EOT
-exec /var/opt/rhodecode_bin/bin/gunicorn --name=gunicorn-rhodecode-1 --error-logfile=- --paster=/local/rhodecode.optimized.ini --config=/etc/rhodecode/conf_build/gunicorn_conf.py &
-exec /home/rhodecode/.rccontrol/vcsserver-1/profile/bin/gunicorn --name=gunicorn-vcsserver-1 --error-logfile=- --paster=/local/vcsserver.optimized.ini --config=/etc/rhodecode/conf_build/gunicorn_conf.py
+	group "rhodecode-server" {
+		count = "1"
+		# install only on "data" nodes
+		constraint {
+				attribute = "$\u007Bnode.class\u007D"
+				value     = "data"
+		}
+		restart {
+				attempts = 3
+				delay = "60s"
+				interval = "1h"
+				mode = "fail"
+		}
+		network {
+			mode = "host"
+			port "rhodecode" { to = 10020 }
+			port "vcsserver" { to = 10010 }
+			port "webdav" { to = 8090 }
+		}
+		task "prep-disk" {
+			driver = "docker"
+			config {
+				image = "busybox:latest"
+				mount {
+					type = "volume"
+					target = "/etc/rhodecode/conf"
+					source = "rhodecode-conf"
+					readonly = false
+					volume_options {
+						no_copy = false
+						driver_config {
+							name = "pxd"
+							options {
+								io_priority = "high"
+								shared = true
+								size = 1
+								repl = 2
+							}
+						}
+					}
+				}
+				command = "sh"
+				args = ["-c", "mkdir -p /etc/rhodecode/conf/svn && touch /etc/rhodecode/conf/svn/mod_dav_svn.conf"]
+			}
+			resources {
+				cpu = 20
+				memory = 32
+			}
+			lifecycle {
+				hook = "prestart"
+				sidecar = "false"
+			}
+		}
+		task "rhodecode" {
+			artifact {
+				source = ${extensions_url}
+				destination = "local"
+			}
+
+			driver = "docker"
+			template {
+					data =<<EOT
+MOD_DAV_SVN_PORT=8090
+APACHE_LOG_DIR="/var/log/rhodecode"
+MOD_DAV_SVN_CONF_FILE="/etc/rhodecode/conf/svn/mod_dav_svn.conf"
 EOT
-                                destination = "local/run.sh"
-                        }
-                        template {
-                                data =<<EOT
+				destination="local/svn.env"
+				env = true
+			}
+			template {
+					data =<<EOT
+exec /var/opt/rhodecode_bin/bin/gunicorn --name=gunicorn-rhodecode-1 --error-logfile=- --paster=/secrets/rhodecode.optimized.ini --config=/etc/rhodecode/conf_build/gunicorn_conf.py &
+exec /home/rhodecode/.rccontrol/vcsserver-1/profile/bin/gunicorn --name=gunicorn-vcsserver-1 --error-logfile=- --paster=/secrets/vcsserver.optimized.ini --config=/etc/rhodecode/conf_build/gunicorn_conf.py &
+exec apachectl -D FOREGROUND
+EOT
+					destination = "local/run.sh"
+				}
+				template {
+						data =<<EOT
 
 TZ="UTC"
 RC_APP_TYPE="rhodecode_http"
@@ -55,13 +100,14 @@ GIT_SSL_CAINFO="/etc/rhodecode/conf_build/ca-bundle.crt"
 GEVENT_RESOLVER="ares"
 DB_UPGRADE=1
 SETUP_APP=0
-MAIN_INI_PATH="/local/rhodecode.optimized.ini"
+MAIN_INI_PATH="/secrets/rhodecode.optimized.ini"
+EXTERNAL_HOSTNAME={{ with secret "forge/rhodecode/app" }}{{ .Data.data.rc_external_hostname }}{{end}}
 EOT
-                                destination="secrets/file.env"
-                                env = true
-                        }
-                        template {
-                                data = <<EOT
+						destination="local/rc.env"
+						env = true
+				}
+				template {
+						data = <<EOT
 ; #################################
 ; RHODECODE VCSSERVER CONFIGURATION
 ; #################################
@@ -230,7 +276,7 @@ level = NOTSET
 handlers = console
 
 [logger_vcsserver]
-level = DEBUG
+level = INFO
 handlers =
 qualname = vcsserver
 propagate = 1
@@ -254,10 +300,10 @@ formatter = generic
 format = %(asctime)s.%(msecs)03d [%(process)d] %(levelname)-5.5s [%(name)s] %(message)s
 datefmt = %Y-%m-%d %H:%M:%S
 EOT
-                                destination = "local/vcsserver.optimized.ini"
-                        }
-                        template {
-                                data = <<EOT
+						destination = "secrets/vcsserver.optimized.ini"
+				}
+				template {
+						data = <<EOT
 ; ##########################################
 ; RHODECODE ENTERPRISE EDITION CONFIGURATION
 ; ##########################################
@@ -304,7 +350,7 @@ memory_usage_check_interval = 60
 memory_usage_recovery_threshold = 0.8
 [filter:proxy-prefix]
 use = egg:PasteDeploy#prefix
-prefix = /rhodecode
+prefix = /
 [app:main]
 use = egg:rhodecode-enterprise-ce
 filter-with = proxy-prefix
@@ -313,7 +359,8 @@ generate_js_files = false
 lang = fr
 startup.import_repos = false
 archive_cache_dir = /etc/rhodecode/conf/data/tarballcache
-app.base_url = {{ with secret "forge/rhodecode/app" }}{{ .Data.data.rc_base_url }}{{end}}
+{{ with secret "forge/rhodecode/app" }}
+app.base_url = {{ .Data.data.rc_protocol }}://{{ .Data.data.rc_external_hostname }}{{end}}
 app_instance_uuid = 4442f2dac4dc4fb982f781546735bb99
 cut_off_limit_diff = 512000
 cut_off_limit_file = 128000
@@ -419,7 +466,7 @@ vcs.connection_timeout = 3600
 svn.proxy.generate_config = true
 svn.proxy.list_parent_path = true
 svn.proxy.config_file_path = /etc/rhodecode/conf/svn/mod_dav_svn.conf
-svn.proxy.location_root = /repos/
+svn.proxy.location_root = /
 ; ####################
 ; SSH Support Settings
 ; ####################
@@ -449,7 +496,7 @@ keys = generic, color_formatter, color_formatter_sql
 ; #######
 
 [logger_root]
-level = DEBUG
+level = INFO
 handlers = console
 
 [logger_sqlalchemy]
@@ -459,30 +506,30 @@ qualname = sqlalchemy.engine
 propagate = 0
 
 [logger_beaker]
-level = DEBUG
+level = INFO
 handlers =
 qualname = beaker.container
 propagate = 1
 
 [logger_rhodecode]
-level = DEBUG
+level = INFO
 handlers = console
 qualname = rhodecode
 propagate = 1
 
 [logger_ssh_wrapper]
-level = DEBUG
+level = INFO
 handlers =
 qualname = ssh_wrapper
 propagate = 1
 
 [logger_celery]
-level = DEBUG
+level = INFO
 handlers =
 qualname = celery
 
 [logger_vcsserver]
-level = DEBUG
+level = INFO
 handlers = console
 qualname = vcsserver-
 
@@ -494,7 +541,7 @@ qualname = vcsserver-
 [handler_console]
 class = StreamHandler
 args = (sys.stderr, )
-level = DEBUG
+level = INFO
 formatter = generic
 
 [handler_console_sql]
@@ -522,116 +569,126 @@ class = rhodecode.lib.logging_formatter.ColorFormatterSql
 format = %(asctime)s.%(msecs)03d [%(process)d] %(levelname)-5.5s [%(name)s] %(message)s
 datefmt = %Y-%m-%d %H:%M:%S
 EOT
-                                destination = "local/rhodecode.optimized.ini"
-                        }
-                        config {
-                                image = "${image}:${tag}"
-                                extra_hosts = [ "svn:$\u007BNOMAD_IP_rhodecode\u007D" ]
-                                command = "sh"
-                                args = [ "/local/run.sh" ]
-                                ports = ["rhodecode", "vcsserver"]
-                                mount {
-                                        type = "volume"
-                                        target = "/var/opt/rhodecode_repo_store"
-                                        source = "rhodecode-repos"
-                                        readonly = false
-                                        volume_options {
-                                                no_copy = false
-                                                driver_config {
-                                                        name = "pxd"
-                                                        options {
-                                                                io_priority = "high"
-                                                                shared = true
-                                                                size = 20
-                                                                repl = 2
-                                                        }
-                                                }
-                                        }
-                                }
-                                mount {
-                                        type = "volume"
-                                        target = "/etc/rhodecode/conf"
-                                        source = "rhodecode-conf"
-                                        readonly = false
-                                        volume_options {
-                                                no_copy = false
-                                                driver_config {
-                                                        name = "pxd"
-                                                        options {
-                                                                io_priority = "high"
-                                                                shared = true
-                                                                size = 1
-                                                                repl = 2
-                                                        }
-                                                }
-                                        }
-                                }
-                                mount {
-                                  type = "volume"
-                                  target = "/var/opt/rhodecode_data"
-                                  source = "rhodecode-data"
-                                  readonly = false
-                                  volume_options {
-                                        no_copy = false
-                                        driver_config {
-                                          name = "pxd"
-                                          options {
-                                                io_priority = "high"
-                                                shared = true
-                                                size = 1
-                                                repl = 2
-                                          }
-                                        }
-                                  }
-                                }
-                                mount {
-                                        type = "tmpfs"
-                                        target = "/data_ramdisk"
-                                        readonly = false
-                                        tmpfs_options {
-                                                size = 100000
-                                        }
-                                }
-                                mount {
-                                        type = "bind"
-                                        target = "/var/log/rhodecode"
-                                        source = "tmp"
-                                        readonly = false
-                                        bind_options {
-                                                propagation = "rshared"
-                                        }
-                                }
-                        }
-                        resources {
-                                cpu = ${cpu}
-                                memory = ${memory}
-                        }
-                        service {
-                                name = "$\u007BNOMAD_TASK_NAME\u007D-http"
-                                tags = ["urlprefix-/rhodecode"]
-                                port = "rhodecode"
-                                check {
-                                        name         = "rhodecode-alive"
-                                        type         = "http"
-                                        path         = "_admin/ops/ping"
-                                        interval     = "60s"
-                                        timeout      = "30s"
-                                        port         = "rhodecode"
-                                }
-                        }
-                        service {
-                                name = "$\u007BNOMAD_JOB_NAME\u007D-vcsserver"
-                                port = "vcsserver"
-                                check {
-                                        name         = "vcsserver-alive"
-                                        type         = "http"
-                                        path         = "/status"
-                                        interval     = "60s"
-                                        timeout      = "30s"
-                                        port         = "vcsserver"
-                                }
-                        }
-                }
-        }
+				destination = "secrets/rhodecode.optimized.ini"
+			}
+			config {
+				image = "${image}:${tag}"
+				command = "sh"
+				args = [ "/local/run.sh" ]
+				ports = ["rhodecode", "vcsserver", "webdav"]
+				mount {
+					type = "volume"
+					target = "/var/opt/rhodecode_repo_store"
+					source = "rhodecode-repos"
+					readonly = false
+					volume_options {
+						no_copy = false
+						driver_config {
+							name = "pxd"
+							options {
+								io_priority = "high"
+								shared = true
+								size = 100
+								repl = 2
+							}
+						}
+					}
+				}
+				mount {
+					type = "volume"
+					target = "/etc/rhodecode/conf"
+					source = "rhodecode-conf"
+					readonly = false
+					volume_options {
+						no_copy = false
+						driver_config {
+							name = "pxd"
+							options {
+								io_priority = "high"
+								shared = true
+								size = 1
+								repl = 2
+							}
+						}
+					}
+				}
+				mount {
+					type = "volume"
+					target = "/var/opt/rhodecode_data"
+					source = "rhodecode-data"
+					readonly = false
+					volume_options {
+						no_copy = false
+						driver_config {
+							name = "pxd"
+							options {
+								io_priority = "high"
+								shared = true
+								size = 1
+								repl = 2
+							}
+						}
+					}
+				}
+				mount {
+					type = "tmpfs"
+					target = "/data_ramdisk"
+					readonly = false
+					tmpfs_options {
+						size = 100000
+					}
+				}
+				mount {
+					type = "bind"
+					target = "/var/log/rhodecode"
+					source = "tmp"
+					readonly = false
+					bind_options {
+						propagation = "rshared"
+					}
+				}
+			}
+			resources {
+					cpu = ${cpu}
+					memory = ${memory}
+			}
+			service {
+				name = "$\u007BNOMAD_TASK_NAME\u007D-http"
+				tags = ["urlprefix-$\u007BEXTERNAL_HOSTNAME\u007D"]
+				port = "rhodecode"
+				check {
+					name         = "rhodecode-alive"
+					type         = "http"
+					path         = "_admin/ops/ping"
+					interval     = "60s"
+					timeout      = "30s"
+					port         = "rhodecode"
+				}
+			}
+			service {
+				name = "$\u007BNOMAD_JOB_NAME\u007D-vcsserver"
+				port = "vcsserver"
+				check {
+					name         = "vcsserver-alive"
+					type         = "http"
+					path         = "/status"
+					interval     = "60s"
+					timeout      = "30s"
+					port         = "vcsserver"
+				}
+			}
+			service {
+				name = "$\u007BNOMAD_JOB_NAME\u007D-svn"
+				port = "webdav"
+				check {
+					name         = "alive"
+					type         = "tcp"
+					interval     = "30s"
+					timeout      = "2s"
+					port         = "webdav"
+				}
+			}
+		}
+	}
 }
 
