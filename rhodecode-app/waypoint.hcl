@@ -53,8 +53,8 @@ variable "memory" {
 }
 
 variable "extensions_url" {
-	type	= string
-	default = "http://repo.proxy-dev-forge.asip.hst.fluxus.net/artifactory/ext-tools/rhodecode/rcextensions.zip"
+    type    = string
+    default = "http://repo.proxy-dev-forge.asip.hst.fluxus.net/artifactory/ext-tools/rhodecode/rcextensions.zip"
 }
 
 variable "image" {
