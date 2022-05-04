@@ -320,7 +320,7 @@ EOT
 							options {
 								io_priority = "high"
 								shared = true
-								size = 1
+								size = 10
 								repl = 2
 							}
 						}
