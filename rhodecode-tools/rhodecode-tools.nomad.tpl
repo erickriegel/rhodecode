@@ -15,7 +15,7 @@ job "rhodecode-tools" {
                 count = "1"
                # install only on "data" nodes
                 constraint {
-                                attribute = "${node.class}"
+                                attribute = "$\u007Bnode.class\u007D"
                                 value     = "data"
                 }
 
