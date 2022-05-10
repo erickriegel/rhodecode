@@ -421,8 +421,11 @@ rc_cache.cache_repo.arguments.socket_timeout = 30
 
 beaker.session.type = ext:redis
 beaker.session.url = {{ range service "rhodecode-redis" }}redis://{{ .Address }}:{{ .Port }}/2{{ end }}
-beaker.session.key = http_app
-beaker.session.secret = b39acb28b2304a27a6a0e911500bf7d1
+;beaker.session.key = http_app
+;beaker.session.secret = b39acb28b2304a27a6a0e911500bf7d1
+beaker.session.key = rhodecode
+beaker.session.secret = production-rc-uytcxaz
+
 beaker.session.lock_dir = /data_ramdisk/lock
 beaker.session.timeout = 2592000
 beaker.session.httponly = true
